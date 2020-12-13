@@ -1,5 +1,6 @@
 module AocUtil
   ( testAndRun
+  , testAndRun2
   , linesOf
   , number
   )
@@ -23,6 +24,10 @@ testAndRun p f sampleResult = do
   progName <- getProgName
   parseAndVerify p f ("samples/" ++ progName ++ ".txt") sampleResult
   parseAndOutput p f ("input/" ++ progName ++ ".txt")
+
+testAndRun2 :: (Eq b, Show b, Eq c, Show c) => ReadP a -> (a -> b) -> b -> (a -> c) -> c -> IO ()
+testAndRun2 p f1 sampleResult1 f2 sampleResult2 = testAndRun p both (sampleResult1, sampleResult2)
+  where both val = (f1 val, f2 val)
 
 parseAndVerify :: (Eq b, Show b) => ReadP a -> (a -> b) -> FilePath -> b -> IO ()
 parseAndVerify p f path val = do
