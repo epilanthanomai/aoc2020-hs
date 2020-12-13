@@ -1,0 +1,36 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 2ec703bb544313347d331f9016a9a8bf2adde7addf88ca24ff727e8fc6574ab5
+
+name:           aoc2020
+version:        0.1.0.0
+description:    Advent of Code 2020 implementation
+homepage:       https://github.com/epilanthanomai/aoc2020-hs#readme
+bug-reports:    https://github.com/epilanthanomai/aoc2020-hs/issues
+author:         Hope Ranker
+maintainer:     hope.ranker@gmail.com
+copyright:      Copyright: (c) 2020 Hope Ranker
+license:        GPL-3.0-or-later
+build-type:     Simple
+extra-source-files:
+    README.md
+data-files:
+    samples/hello.txt
+
+source-repository head
+  type: git
+  location: https://github.com/epilanthanomai/aoc2020-hs
+
+executable day01
+  main-is: day01.hs
+  other-modules:
+      Paths_aoc2020
+  hs-source-dirs:
+      ./.
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010

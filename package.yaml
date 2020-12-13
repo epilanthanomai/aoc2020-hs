@@ -1,0 +1,26 @@
+name:         aoc2020
+version:      0.1.0.0
+github:       "epilanthanomai/aoc2020-hs"
+license:      GPL-3.0-or-later
+author:       "Hope Ranker"
+maintainer:   "hope.ranker@gmail.com"
+copyright:    "Copyright: (c) 2020 Hope Ranker"
+description:  "Advent of Code 2020 implementation"
+
+extra-source-files:
+- README.md
+
+source-dirs:  .
+data-files:
+- samples/*.txt
+- problems/*.txt
+
+dependencies:
+- base >= 4.7 && < 5
+
+other-modules:
+- Paths_aoc2020
+
+executables:
+  day01:
+    main:     day01.hs
