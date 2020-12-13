@@ -8,14 +8,27 @@ import Text.ParserCombinators.ReadP
   )
 
 import AocUtil
-  ( testAndRun
+  ( testAndRun2
   , linesOf
   )
 
 data MapPoint = Clear | Tree deriving (Eq, Show)
 
+
+paths =
+  [(1, 1),
+   (1, 3),
+   (1, 5),
+   (1, 7),
+   (2, 1)
+  ]
+
 main :: IO ()
-main = testAndRun inputData (countTreesInPath 1 3) 7
+main = testAndRun2 inputData
+                   (countTreesInPath 1 3) 7
+                   (product . allPathCounts) 336
+  where allPathCounts terrain = [ countTreesInPath down right terrain | (down, right) <- paths ]
+
 
 inputData :: ReadP [[MapPoint]]
 inputData = linesOf mapRow
