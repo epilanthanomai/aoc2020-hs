@@ -24,3 +24,5 @@ other-modules:
 executables:
   day01:
     main:     day01.hs
+  day02:
+    main:     day02.hs

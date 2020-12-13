@@ -54,5 +54,5 @@ parse p path = do
 linesOf :: ReadP a -> ReadP [a]
 linesOf p = many (p <* char '\n') <* eof
 
-number :: ReadP Integer
+number :: (Integral n, Read n) => ReadP n
 number = read <$> munch1 isDigit
