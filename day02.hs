@@ -9,16 +9,18 @@ import Text.ParserCombinators.ReadP
   , string
   )
 import AocUtil
-  ( testAndRun
+  ( testAndRun2
   , linesOf
   , number
-  ) 
+  )
 
 main :: IO ()
-main = testAndRun inputData countValid 2
+main = testAndRun2 inputData
+                  (countValid validByCount) 2
+                  (countValid validByPosition) 1
   where
     inputData = linesOf passwordRecord
-    countValid = length . filter passwordValid
+    countValid strategy = length . filter strategy
 
 data PasswordRecord = PasswordRecord Int Int Char String
 
@@ -36,7 +38,13 @@ passwordRecord = do
 password :: ReadP String
 password = munch1 $ \c -> c /= '\n'
 
-passwordValid :: PasswordRecord -> Bool
-passwordValid (PasswordRecord low high c password) =
+validByCount :: PasswordRecord -> Bool
+validByCount (PasswordRecord low high c password) =
   let count = length $ filter (== c) password
    in (low <= count) && (count <= high)
+
+validByPosition :: PasswordRecord -> Bool
+validByPosition (PasswordRecord low high c password) =
+  let lowChar = password !! (low - 1)
+      highChar = password !! (high - 1)
+   in (lowChar == c || highChar == c) && not (lowChar == highChar)
