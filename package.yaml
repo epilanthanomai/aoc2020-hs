@@ -13,7 +13,7 @@ extra-source-files:
 source-dirs:  .
 data-files:
 - samples/*.txt
-- problems/*.txt
+- input/*.txt
 
 dependencies:
 - base >= 4.7 && < 5
