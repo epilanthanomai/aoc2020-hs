@@ -1,23 +1,33 @@
 module AocUtil
   ( testAndRun
   , testAndRun2
+  , digits
+  , digitsInRange
+  , isNumberInRange
   , linesOf
   , number
   )
 where
 
+import Control.Monad (guard)
 import Data.Char (isDigit)
 import System.Environment (getProgName)
 import Text.ParserCombinators.ReadP
   ( ReadP
   , char
+  , count
   , eof
   , many
   , munch1
   , readP_to_S
+  , satisfy
   )
 
 import Paths_aoc2020 (getDataFileName)
+
+--
+-- problem main functionality
+--
 
 testAndRun :: (Eq b, Show b) => ReadP a -> (a -> b) -> b -> IO ()
 testAndRun p f sampleResult = do
@@ -43,6 +53,10 @@ parseAndOutput p f path = do
   let result = f input
   putStrLn $ show result
 
+--
+-- parsing utilities
+--
+
 parse :: ReadP a -> FilePath -> IO a
 parse p path = do
   inputContents <- getDataFileName path >>= readFile
@@ -56,3 +70,16 @@ linesOf p = many (p <* char '\n') <* eof
 
 number :: (Integral n, Read n) => ReadP n
 number = read <$> munch1 isDigit
+
+digits :: (Integral n, Read n) => Int -> ReadP n
+digits c = read <$> count 4 (satisfy isDigit)
+
+isNumberInRange :: Integral n => n -> n -> n -> Bool
+isNumberInRange low high year = low <= year && year <= high
+
+digitsInRange :: Int -> Int -> Int -> ReadP Int
+digitsInRange chars low high = do
+  n <- digits chars
+  guard $ isNumberInRange low high n
+  return n
+

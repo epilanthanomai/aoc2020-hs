@@ -28,3 +28,5 @@ executables:
     main:     day02.hs
   day03:
     main:     day03.hs
+  day04:
+    main:     day04.hs
