@@ -18,9 +18,6 @@ data-files:
 dependencies:
 - base >= 4.7 && < 5
 
-other-modules:
-- Paths_aoc2020
-
 executables:
   day01:
     main:     day01.hs
