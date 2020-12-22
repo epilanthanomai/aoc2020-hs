@@ -1,11 +1,11 @@
 module Main where
 
 import Control.Applicative ((<|>))
-import Data.List (foldl')
+import Control.Monad (foldM)
+import Data.List (foldl', sort)
 import Text.ParserCombinators.ReadP
   ( ReadP
   , char
-  , eof
   , many1
   )
 
@@ -25,9 +25,11 @@ data Seat = Seat SeatRowSpecifier SeatColumnSpecifier deriving (Show, Eq, Ord)
 main :: IO ()
 main = do
     mapM_ (uncurry runTest) testCases
-    parseInputAndPrint inputData maxSeatId
+    parseInputAndPrint inputData problemOutputs
   where
+    problemOutputs seats = (maxSeatId seats, firstMissingSeatId seats)
     maxSeatId = foldr1 max . map seatId
+    firstMissingSeatId = firstMissing . sort . map seatId
 
 runTest :: String -> Int -> IO ()
 runTest seatString expectSeatId =
@@ -72,3 +74,7 @@ columnId = collectBits $ bitPair LeftSeat RightSeat
 
 seatId :: Num n => Seat -> n
 seatId (Seat rowSpec columnSpec) = (rowId rowSpec) * 8 + (columnId columnSpec)
+
+firstMissing :: (Eq a, Enum a) => [a] -> a
+firstMissing (n : rest) = either id succ $ foldM checkNext n rest
+  where checkNext a b = let a' = succ a in (if a' == b then Right else Left) a'
