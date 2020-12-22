@@ -1,11 +1,17 @@
 module AocUtil
-  ( testAndRun
+  ( -- main utilities
+    testAndRun
   , testAndRun2
+  , parseSampleAndVerify
+  , parseInputAndPrint
+  , assertEqual
+    -- parsing
   , digits
   , digitsInRange
   , isNumberInRange
   , linesOf
   , number
+  , parse
   )
 where
 
@@ -31,42 +37,60 @@ import Paths_aoc2020 (getDataFileName)
 
 testAndRun :: (Eq b, Show b) => ReadP a -> (a -> b) -> b -> IO ()
 testAndRun p f sampleResult = do
-  progName <- getProgName
-  parseAndVerify p f ("samples/" ++ progName ++ ".txt") sampleResult
-  parseAndOutput p f ("input/" ++ progName ++ ".txt")
+  parseSampleAndVerify p f sampleResult
+  parseInputAndPrint p f
 
 testAndRun2 :: (Eq b, Show b, Eq c, Show c) => ReadP a -> (a -> b) -> b -> (a -> c) -> c -> IO ()
 testAndRun2 p f1 sampleResult1 f2 sampleResult2 = testAndRun p both (sampleResult1, sampleResult2)
   where both val = (f1 val, f2 val)
 
-parseAndVerify :: (Eq b, Show b) => ReadP a -> (a -> b) -> FilePath -> b -> IO ()
-parseAndVerify p f path val = do
-  input <- parse p path
+parseSampleAndVerify :: (Eq b, Show b) => ReadP a -> (a -> b) -> b -> IO ()
+parseSampleAndVerify p f val = do
+  path <- defaultSampleFile
+  input <- parseFile p path
   let result = f input
-  if result == val
-     then return ()
-     else error $ "Unexpected value from test input: " ++ (show result)
+  assertEqual val result
 
-parseAndOutput :: Show b => ReadP a -> (a -> b) -> FilePath -> IO ()
-parseAndOutput p f path = do
-  input <- parse p path
+assertEqual :: (Eq a, Show a) => a -> a -> IO ()
+assertEqual expect actual =
+  if expect == actual
+     then return ()
+     else error $ "Unexpected value from test input: " ++ (show actual)
+
+
+parseInputAndPrint :: Show b => ReadP a -> (a -> b) -> IO ()
+parseInputAndPrint p f = do
+  path <- defaultInputFile
+  input <- parseFile p path
   let result = f input
   putStrLn $ show result
+
+defaultSampleFile :: IO String
+defaultSampleFile = do
+  progName <- getProgName
+  return $ "samples/" ++ progName ++ ".txt"
+
+defaultInputFile :: IO String
+defaultInputFile = do
+  progName <- getProgName
+  return $ "input/" ++ progName ++ ".txt"
 
 --
 -- parsing utilities
 --
 
-parse :: ReadP a -> FilePath -> IO a
-parse p path = do
-  inputContents <- getDataFileName path >>= readFile
-  case readP_to_S p inputContents of
-    [] -> error "Unable to parse data file"
+parseFile :: ReadP a -> FilePath -> IO a
+parseFile p path = getDataFileName path >>= readFile >>= parse p
+
+parse :: MonadFail m => ReadP a -> String -> m a
+parse p s =
+  case readP_to_S (p <* eof) s of
+    [] -> fail "Unable to parse data file"
     [(result, "")] -> return result
-    _ -> error "Multiple parses of data file"
+    _ -> fail "Multiple parses of data file"
 
 linesOf :: ReadP a -> ReadP [a]
-linesOf p = many (p <* char '\n') <* eof
+linesOf p = many $ p <* char '\n'
 
 number :: (Integral n, Read n) => ReadP n
 number = read <$> munch1 isDigit
@@ -82,4 +106,3 @@ digitsInRange chars low high = do
   n <- digits chars
   guard $ isNumberInRange low high n
   return n
-

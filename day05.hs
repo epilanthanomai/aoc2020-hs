@@ -9,7 +9,12 @@ import Text.ParserCombinators.ReadP
   , many1
   )
 
-import AocUtil (testAndRun, linesOf)
+import AocUtil
+  ( assertEqual
+  , parseInputAndPrint
+  , parse
+  , linesOf
+  )
 
 data SeatRowElement = FrontSeat | BackSeat deriving (Show, Eq, Ord)
 data SeatColumnElement = LeftSeat | RightSeat deriving (Show, Eq, Ord)
@@ -18,8 +23,22 @@ type SeatColumnSpecifier = [SeatColumnElement]
 data Seat = Seat SeatRowSpecifier SeatColumnSpecifier deriving (Show, Eq, Ord)
 
 main :: IO ()
-main = testAndRun inputData maxSeatId 820
-  where maxSeatId = foldr1 max . map seatId
+main = do
+    mapM_ (uncurry runTest) testCases
+    parseInputAndPrint inputData maxSeatId
+  where
+    maxSeatId = foldr1 max . map seatId
+
+runTest :: String -> Int -> IO ()
+runTest seatString expectSeatId =
+  assertEqual (Just expectSeatId) $ parse (seatId <$> seat) seatString
+
+testCases :: [(String, Int)]
+testCases =
+  [ ("BFFFBBFRRR", 567)
+  , ("FFFBBBFRRR", 119)
+  , ("BBFFBBFRLL", 820)
+  ]
 
 inputData :: ReadP [Seat]
 inputData = linesOf seat

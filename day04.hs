@@ -6,10 +6,8 @@ import Data.Char (isDigit, isHexDigit)
 import Data.Maybe (isJust, listToMaybe)
 import Text.ParserCombinators.ReadP
   ( ReadP
-  , readP_to_S
   , char
   , count
-  , eof
   , many
   , many1
   , munch1
@@ -21,6 +19,7 @@ import AocUtil
   , digitsInRange
   , isNumberInRange
   , number
+  , parse
   )
 
 type FieldName = String
@@ -42,7 +41,6 @@ inputData :: ReadP [FieldBag]
 inputData = do
   first <- fieldBag
   rest <- many $ char '\n' *> fieldBag
-  eof
   return $ first : rest
 
 fieldBag :: ReadP FieldBag
@@ -146,7 +144,4 @@ hasValidFieldData b = isJust $ do
   validateField "pid" parsePid b
 
 validateField :: String -> ReadP a -> FieldBag -> Maybe ()
-validateField fieldName p b = do
-  fData <- lookup fieldName b
-  let readS = readP_to_S (p <* eof) fData
-  const () <$> listToMaybe readS
+validateField fieldName p b = lookup fieldName b >>= parse p >> return ()
