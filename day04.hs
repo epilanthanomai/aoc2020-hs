@@ -16,10 +16,13 @@ import Text.ParserCombinators.ReadP
   )
 import AocUtil
   ( testAndRun2
+  , blocksOf
   , digitsInRange
   , isNumberInRange
+  , linesOf1
   , number
   , parse
+  , separated
   )
 
 type FieldName = String
@@ -38,20 +41,13 @@ main = testAndRun2 inputData
 --
 
 inputData :: ReadP [FieldBag]
-inputData = do
-  first <- fieldBag
-  rest <- many $ char '\n' *> fieldBag
-  return $ first : rest
+inputData = blocksOf fieldBag
 
 fieldBag :: ReadP FieldBag
-fieldBag = mconcat <$> many1 fieldLine
+fieldBag = mconcat <$> linesOf1 fields
 
-fieldLine :: ReadP FieldBag
-fieldLine = do
-  first <- fieldPair
-  rest <- many $ char ' ' *> fieldPair
-  char '\n'
-  return $ first : rest
+fields :: ReadP FieldBag
+fields =  separated (char ' ') fieldPair
 
 fieldPair :: ReadP FieldPair
 fieldPair = do

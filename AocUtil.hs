@@ -6,12 +6,15 @@ module AocUtil
   , parseInputAndPrint
   , assertEqual
     -- parsing
+  , blocksOf
   , digits
   , digitsInRange
   , isNumberInRange
   , linesOf
+  , linesOf1
   , number
   , parse
+  , separated
   )
 where
 
@@ -24,6 +27,7 @@ import Text.ParserCombinators.ReadP
   , count
   , eof
   , many
+  , many1
   , munch1
   , readP_to_S
   , satisfy
@@ -89,8 +93,17 @@ parse p s =
     [(result, "")] -> return result
     _ -> fail "Multiple parses of data file"
 
+separated :: ReadP s -> ReadP a -> ReadP [a]
+separated s p = (:) <$> p <*> many (s *> p)
+
 linesOf :: ReadP a -> ReadP [a]
 linesOf p = many $ p <* char '\n'
+
+linesOf1 :: ReadP a -> ReadP [a]
+linesOf1 p = many1 $ p <* char '\n'
+
+blocksOf :: ReadP a -> ReadP [a]
+blocksOf = separated $ char '\n'
 
 number :: (Integral n, Read n) => ReadP n
 number = read <$> munch1 isDigit
