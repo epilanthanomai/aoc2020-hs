@@ -8,7 +8,7 @@ import Text.ParserCombinators.ReadP
   )
 
 import AocUtil
-  ( testAndRun
+  ( testAndRun2
   , blocksOf
   , linesOf
   )
@@ -18,10 +18,12 @@ type Form = HS.HashSet Question
 type Group = [Form]
 
 main :: IO ()
-main = testAndRun inputData groupQuestionCounts 11
+main = testAndRun2 inputData
+                   (groupQuestionCounts HS.union) 11
+                   (groupQuestionCounts HS.intersection) 6
   where
-    groupQuestionCounts = sum . map questionsInGroup
-    questionsInGroup = length . foldr1 HS.union
+    groupQuestionCounts combine = sum . map (questionsInGroup combine)
+    questionsInGroup combine = length . foldr1 combine
 
 inputData :: ReadP [Group]
 inputData = blocksOf group
