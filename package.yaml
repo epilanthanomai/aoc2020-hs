@@ -20,12 +20,15 @@ dependencies:
 
 executables:
   day01:
-    main:     day01.hs
+    main:           day01.hs
   day02:
-    main:     day02.hs
+    main:           day02.hs
   day03:
-    main:     day03.hs
+    main:           day03.hs
   day04:
-    main:     day04.hs
+    main:           day04.hs
   day05:
-    main:     day05.hs
+    main:           day05.hs
+  day06:
+    main:           day06.hs
+    dependencies:   unordered-containers
