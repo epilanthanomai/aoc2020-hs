@@ -14,7 +14,9 @@ import Text.ParserCombinators.ReadP
   )
 
 import AocUtil
-  ( testAndRun
+  ( assertEqual
+  , parseFile
+  , parseInputAndPrint
   , linesOf
   , number
   , separated
@@ -27,15 +29,23 @@ type ContentsMap = HM.HashMap BagColor [BagCount]
 type SimpleContentsMap = HM.HashMap BagColor (HS.HashSet BagColor)
 
 main :: IO ()
--- main = undefined
-main = testAndRun inputData (containerCount myBag) 4
-  where containerCount color contents = HS.size $ recursiveLookup (containersMap contents) color
-        containersMap = invert . stripCounts
-        stripCounts = HM.map $ HS.fromList . map snd
-        -- TODO: this seems like it should be a lot simpler...
-        invert = fromPairs . fmap swap . toPairs
-        toPairs = mconcat . map (traverse HS.toList) . HM.toList
-        fromPairs = foldr (uncurry (HM.insertWith mappend)) HM.empty . (fmap . fmap) HS.singleton
+main = do
+    parseFile inputData "samples/day07-a.txt" >>= assertEqual 4 . containerCount myBag
+    parseFile inputData "samples/day07-b.txt" >>= assertEqual 126 . countBags myBag
+    parseInputAndPrint inputData $ \contents -> (containerCount myBag contents, countBags myBag contents)
+  where
+    -- part 1
+    containerCount color contents = HS.size $ recursiveLookup (containersMap contents) color
+    containersMap = invert . stripCounts
+    stripCounts = HM.map $ HS.fromList . map snd
+    -- TODO: this seems like it should be a lot simpler...
+    invert = fromPairs . fmap swap . toPairs
+    toPairs = mconcat . map (traverse HS.toList) . HM.toList
+    fromPairs = foldr (uncurry (HM.insertWith mappend)) HM.empty . (fmap . fmap) HS.singleton
+    -- part 2
+    countBags color contents = (rfoldr addCount (uncurry . nextBags $ contents) 0 [(1, color)]) - 1
+    addCount = (+) . fst
+    nextBags contents count color _ = map (mapFst (* count)) $ mlookup color contents
 
 myBag :: BagColor
 myBag = "shiny gold"
@@ -87,13 +97,17 @@ rfoldr f g = foldr go
 
 -- TODO: this seems like it should be some common library function over
 -- HM.lookup...
-setLookup :: (Eq a, Hashable a) => HM.HashMap a (HS.HashSet b) -> a -> HS.HashSet b
-setLookup m k = maybe HS.empty id $ HM.lookup k m
+mlookup :: (Eq a, Hashable a, Monoid b) => a -> HM.HashMap a b -> b
+mlookup k = maybe mempty id . HM.lookup k
+
+-- Also not already a library function??
+mapFst :: (a -> b) -> (a, c) -> (b, c)
+mapFst f = swap . fmap f . swap
 
 recursiveLookup :: SimpleContentsMap -> BagColor -> HS.HashSet BagColor
 recursiveLookup contentsMap color = rfoldr HS.insert newParents firstParents firstParents
   -- NOTE: use firstParents as both the accumulator and the initial set of
   -- rfoldr. rfoldr folds its initial set into the accumulator, so this
   -- skips that.
-  where firstParents = setLookup contentsMap color
-        newParents = HS.difference . setLookup contentsMap
+  where firstParents = mlookup color contentsMap
+        newParents = HS.difference . flip mlookup contentsMap

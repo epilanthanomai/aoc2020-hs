@@ -2,8 +2,9 @@ module AocUtil
   ( -- main utilities
     testAndRun
   , testAndRun2
-  , parseSampleAndVerify
+  , parseFile
   , parseInputAndPrint
+  , parseSampleAndVerify
   , assertEqual
     -- parsing
   , blocksOf
