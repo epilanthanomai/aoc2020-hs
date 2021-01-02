@@ -34,6 +34,3 @@ executables:
     dependencies:   unordered-containers
   day07:
     main:           day07.hs
-    dependencies:
-    - hashable
-    - unordered-containers

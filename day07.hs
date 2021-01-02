@@ -1,9 +1,7 @@
 module Main where
 
 import Control.Applicative ((<|>))
-import Data.Hashable (Hashable)
-import qualified Data.HashMap.Strict as HM
-import qualified Data.HashSet as HS
+import Data.List (union, delete)
 import Data.Maybe (maybe)
 import Data.Tuple (swap)
 import Text.ParserCombinators.ReadP
@@ -25,33 +23,19 @@ import AocUtil
 type BagColor = String
 type BagCount = (Int, BagColor)
 type Contents = (BagColor, [BagCount])
-type ContentsMap = HM.HashMap BagColor [BagCount]
-type SimpleContentsMap = HM.HashMap BagColor (HS.HashSet BagColor)
+type ContentsMap = [(BagColor, [BagCount])]
 
 main :: IO ()
 main = do
     parseFile inputData "samples/day07-a.txt" >>= assertEqual 4 . containerCount myBag
     parseFile inputData "samples/day07-b.txt" >>= assertEqual 126 . countBags myBag
     parseInputAndPrint inputData $ \contents -> (containerCount myBag contents, countBags myBag contents)
-  where
-    -- part 1
-    containerCount color contents = HS.size $ recursiveLookup (containersMap contents) color
-    containersMap = invert . stripCounts
-    stripCounts = HM.map $ HS.fromList . map snd
-    -- TODO: this seems like it should be a lot simpler...
-    invert = fromPairs . fmap swap . toPairs
-    toPairs = mconcat . map (traverse HS.toList) . HM.toList
-    fromPairs = foldr (uncurry (HM.insertWith mappend)) HM.empty . (fmap . fmap) HS.singleton
-    -- part 2
-    countBags color contents = (rfoldr addCount (uncurry . nextBags $ contents) 0 [(1, color)]) - 1
-    addCount = (+) . fst
-    nextBags contents count color _ = map (mapFst (* count)) $ mlookup color contents
 
 myBag :: BagColor
 myBag = "shiny gold"
 
 inputData :: ReadP ContentsMap
-inputData = HM.fromList <$> linesOf contents
+inputData = linesOf contents
 
 contents :: ReadP Contents
 contents = do
@@ -85,6 +69,28 @@ singleContent = do
 noContents :: ReadP [BagCount]
 noContents = string "no other bags" *> return []
 
+containerCount :: String -> ContentsMap -> Int
+containerCount color = length . delete color . recursiveContainers color . collectAllContainers
+  where
+    recursiveContainers color containers = rfoldr (union . (:[])) (recursiveContainers' containers) [] [color]
+    recursiveContainers' containers color _ = mlookup color containers
+    collectAllContainers = invert . stripCounts
+    invert = collectPairs . map swap . expandPairs
+    expandPairs simpleContents = [ (a, b) | (a, bs) <- simpleContents, b <- bs ]
+    collectPairs = foldr (uncurry collectPairs') []
+    collectPairs' key value [] = [(key, [value])]
+    collectPairs' key value (head@(accKey, accValue) : rest)
+      | key == accKey = (accKey, accValue `union` [value]) : rest
+      | otherwise = head : collectPairs' key value rest
+    stripCounts = map (fmap $ map snd)
+
+countBags :: String -> ContentsMap -> Int
+countBags color contents = countBags' contents [(1, color)] - 1
+  where
+    countBags' contents = rfoldr addCount (uncurry . nextBags $ contents) 0
+    addCount = (+) . fst
+    nextBags contents count color _ = map (mapFst (* count)) $ mlookup color contents
+
 -- recursive foldr. for each value in ls, don't just fold it into acc: do
 -- that and then call accumulated g on it and recursively fold those into
 -- acc as well.
@@ -95,19 +101,10 @@ rfoldr f g = foldr go
                        ls' = g v acc'
                     in rfoldr f g acc' ls'
 
--- TODO: this seems like it should be some common library function over
--- HM.lookup...
-mlookup :: (Eq a, Hashable a, Monoid b) => a -> HM.HashMap a b -> b
-mlookup k = maybe mempty id . HM.lookup k
+-- TODO: this seems like it should be some common library function
+mlookup :: (Eq a, Monoid b) => a -> [(a, b)] -> b
+mlookup k = maybe mempty id . lookup k
 
 -- Also not already a library function??
 mapFst :: (a -> b) -> (a, c) -> (b, c)
 mapFst f = swap . fmap f . swap
-
-recursiveLookup :: SimpleContentsMap -> BagColor -> HS.HashSet BagColor
-recursiveLookup contentsMap color = rfoldr HS.insert newParents firstParents firstParents
-  -- NOTE: use firstParents as both the accumulator and the initial set of
-  -- rfoldr. rfoldr folds its initial set into the accumulator, so this
-  -- skips that.
-  where firstParents = mlookup color contentsMap
-        newParents = HS.difference . flip mlookup contentsMap
