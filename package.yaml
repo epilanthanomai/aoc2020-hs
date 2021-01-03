@@ -34,3 +34,6 @@ executables:
     dependencies:   unordered-containers
   day07:
     main:           day07.hs
+  day08:
+    main:           day08.hs
+    dependencies:   vector
