@@ -16,6 +16,8 @@ module AocUtil
   , number
   , parse
   , separated
+  -- general
+  , rfoldr
   )
 where
 
@@ -120,3 +122,17 @@ digitsInRange chars low high = do
   n <- digits chars
   guard $ isNumberInRange low high n
   return n
+
+--
+-- general utils
+--
+
+-- recursive foldr. for each value in ls, don't just fold it into acc: do
+-- that and then call accumulated g on it and recursively fold those into
+-- acc as well.
+-- TODO: this seems like it's probably A Thing. is it in a library somwhere?
+rfoldr :: (Foldable t1, Foldable t2) => (a -> b -> b) -> (a -> b -> t1 a) -> b -> t2 a -> b
+rfoldr f g = foldr go
+  where go v acc = let acc' = f v acc
+                       ls' = g v acc'
+                    in rfoldr f g acc' ls'

@@ -36,4 +36,6 @@ executables:
     main:           day07.hs
   day08:
     main:           day08.hs
-    dependencies:   vector
+    dependencies:
+    - transformers
+    - vector

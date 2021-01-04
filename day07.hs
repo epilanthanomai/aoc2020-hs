@@ -18,6 +18,7 @@ import AocUtil
   , linesOf
   , number
   , separated
+  , rfoldr
   )
 
 type BagColor = String
@@ -90,16 +91,6 @@ countBags color contents = countBags' contents [(1, color)] - 1
     countBags' contents = rfoldr addCount (uncurry . nextBags $ contents) 0
     addCount = (+) . fst
     nextBags contents count color _ = map (mapFst (* count)) $ mlookup color contents
-
--- recursive foldr. for each value in ls, don't just fold it into acc: do
--- that and then call accumulated g on it and recursively fold those into
--- acc as well.
--- TODO: this seems like it's probably A Thing. is it in a library somwhere?
-rfoldr :: (Foldable t1, Foldable t2) => (a -> b -> b) -> (a -> b -> t1 a) -> b -> t2 a -> b
-rfoldr f g = foldr go
-  where go v acc = let acc' = f v acc
-                       ls' = g v acc'
-                    in rfoldr f g acc' ls'
 
 -- TODO: this seems like it should be some common library function
 mlookup :: (Eq a, Monoid b) => a -> [(a, b)] -> b
